@@ -14,8 +14,6 @@ import java.util.ArrayList;
 
 public class Web_Views extends AppCompatActivity {
     private WebView webView;
-    private DAO dao;
-    private ArrayList<News> arrNew = new ArrayList<>();
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

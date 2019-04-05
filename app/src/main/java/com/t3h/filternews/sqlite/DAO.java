@@ -160,15 +160,4 @@ public class DAO extends SQLiteOpenHelper {
         database.close();
         return rows;
     }
-
-    public long updatePathfile(News news) {
-        ContentValues values = new ContentValues();
-        values.put(PATHFILE, news.getPathFile());
-        SQLiteDatabase database = getWritableDatabase();
-        String selection = ID + " = ?";
-        String[] selectionAgrs = {String.valueOf(news.getId())};
-        int rows = database.update(TB_NAME, values, selection, selectionAgrs);
-        database.close();
-        return rows;
-    }
 }

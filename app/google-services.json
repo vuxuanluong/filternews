@@ -1,0 +1,35 @@
+{
+  "project_info": {
+    "project_number": "520678600038",
+    "firebase_url": "https://filternews.firebaseio.com",
+    "project_id": "filternews",
+    "storage_bucket": "filternews.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:520678600038:android:168e335dae1a4e1f",
+        "android_client_info": {
+          "package_name": "com.t3h.filternews"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8zQL4fGKn0w465h8E5C3AtgCwwv4Lah8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "520678600038-4adqdqe4bp3d41pbgtma5sodnruornon.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

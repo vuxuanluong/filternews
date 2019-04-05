@@ -33,7 +33,7 @@ public class FragmentLikeNews extends Fragment implements Adapter.OnItemEventCal
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.like_item, container, false);
+        return inflater.inflate(R.layout.ui_like_news, container, false);
     }
 
     @Override

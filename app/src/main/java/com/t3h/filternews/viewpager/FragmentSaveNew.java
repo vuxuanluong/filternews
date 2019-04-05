@@ -32,7 +32,7 @@ public class FragmentSaveNew extends Fragment implements Adapter.OnItemEventCall
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.save_item, container, false);
+        return inflater.inflate(R.layout.ui_save_news, container, false);
     }
 
     @Override

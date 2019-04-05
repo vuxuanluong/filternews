@@ -53,7 +53,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.news_item, container, false);
+        return inflater.inflate(R.layout.ui_news, container, false);
     }
 
     @Override
