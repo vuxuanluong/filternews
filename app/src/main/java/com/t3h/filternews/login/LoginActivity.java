@@ -101,9 +101,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 String passWord = edtPassword.getText().toString();
                 if (isCheckedSaveLogin){
                     saveUser(userName, passWord);
-                    Intent intentNews  = new Intent(this, ViewPagerActivity.class);
-                    startActivity(intentNews);
                 }
+                Intent intentNews  = new Intent(this, ViewPagerActivity.class);
+                startActivity(intentNews);
                 break;
             case R.id.btn_facebook:
                 break;
