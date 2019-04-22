@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
@@ -14,16 +15,28 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 
+import com.facebook.login.LoginManager;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.t3h.filternews.R;
+import com.t3h.filternews.login.LoginActivity;
 import com.t3h.filternews.viewpager.FragmentItemNews;
 import com.t3h.filternews.viewpager.PageAdapter;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class ViewPagerActivity extends AppCompatActivity implements ViewPager.OnPageChangeListener, View.OnClickListener {
     private ViewPager viewPager;
@@ -35,6 +48,8 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
     private ImageView imgVoice;
     private ImageView imgLanguage;
     private static final int REQUEST_CODE = 111;
+    private LoginActivity loginActivity;
+    private GoogleSignInClient mGoogleSignInClient;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,12 +57,22 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
         setContentView(R.layout.activity_viewpager_news);
         initViews();
         getLanguageFromSharedPrefer();
+        initGoogle();
+        loginActivity = new LoginActivity();
 //        toolbar = findViewById(R.id.toolBar);
 //        setSupportActionBar(toolbar);
 //        if (getSupportActionBar() != null) {
 //            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 //            getSupportActionBar().setDisplayShowHomeEnabled(true);
 //        }
+    }
+
+    private void initGoogle() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
     }
 
     private void initViews() {
@@ -123,6 +148,21 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
                                 fragmentItemNews.setLanguage(english);
                                 saveLanguage(english);
                                 break;
+                            case R.id.sign_out:
+                                if (loginActivity.isLoggedInFaceBook()){
+                                    LoginManager.getInstance().logOut();
+                                    Intent intent1 = new Intent(ViewPagerActivity.this, LoginActivity.class);
+                                    startActivity(intent1);
+                                }
+                                else if (GoogleSignIn.getLastSignedInAccount(ViewPagerActivity.this) != null){
+                                    signOutGoogle();
+                                } else {
+//                                    long endTime = Calendar.getInstance().getTimeInMillis();
+//                                    long totalTime = endTime - loginActivity.getStartTime();
+//                                    Log.d("luong", totalTime + "");
+                                    finish();
+                                }
+                                break;
                         }
                         return true;
                     }
@@ -130,6 +170,15 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
                 popupMenu.show();
                 break;
         }
+    }
+
+    public void signOutGoogle() {
+        mGoogleSignInClient.signOut().addOnSuccessListener(this, new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                finish();
+            }
+        });
     }
 
     @Override
@@ -164,4 +213,7 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
         String language = getIDLanguage();
         fragmentItemNews.setLanguage(language);
     }
+
 }
+
+

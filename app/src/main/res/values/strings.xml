@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">FilterNews</string>
     <string name="facebook_app_id">355784328404403</string>
+    <string name="name">name</string>
+    <string name="id">id</string>
+    <string name="email">email</string>
+    <string name="link">link</string>
+    <string name="fields">fields</string>
+    <string name="fields_name">id,name,link,email</string>
+    <string name="data">data</string>
 </resources>

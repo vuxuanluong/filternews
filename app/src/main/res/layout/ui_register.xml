@@ -27,7 +27,8 @@
             android:id="@+id/edt_username"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Username" />
+            android:hint="Username"
+            android:inputType="text"/>
 
     </LinearLayout>
 
@@ -50,7 +51,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Password"
-            android:password="true"/>
+            android:password="true"
+            android:inputType="text"/>
 
     </LinearLayout>
 
@@ -88,14 +90,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="10dp"
-            android:src="@drawable/ic_phone" />
+            android:src="@drawable/ic_face" />
 
         <EditText
-            android:id="@+id/edt_phone"
+            android:id="@+id/edt_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Phone"
-            android:inputType="phone"/>
+            android:hint="name"
+            android:inputType="text"/>
 
     </LinearLayout>
 

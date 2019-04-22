@@ -27,7 +27,8 @@
             android:id="@+id/edt_username"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Username" />
+            android:hint="Username"
+            android:inputType="text"/>
 
     </LinearLayout>
 
@@ -50,7 +51,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Password"
-            android:password="true"/>
+            android:password="true"
+            android:inputType="text"/>
 
     </LinearLayout>
     <LinearLayout
@@ -97,6 +99,14 @@
         android:layout_margin="20dp"
         style="?android:attr/textAppearanceLarge"
         android:textColor="#fff"/>
+
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/btn_google"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:enabled="false"
+        android:background="#BBDEFB"/>
 
 
 

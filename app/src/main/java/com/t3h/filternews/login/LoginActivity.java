@@ -1,14 +1,13 @@
 package com.t3h.filternews.login;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -16,32 +15,145 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.t3h.filternews.R;
+import com.t3h.filternews.firebase.FireBaseActivity;
 import com.t3h.filternews.main.ViewPagerActivity;
+import com.t3h.filternews.model.User;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import org.json.JSONObject;
 
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
+import java.util.Arrays;
+import java.util.Calendar;
+
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
+    private static final int REQUEST_REGISTER = 20;
+    public static final String KEY_USERNAME = "username";
+    private int RC_SIGN_IN = 10;
     private EditText edtUsername, edtPassword;
     private Button btnLogin;
     private CheckBox cbSaveLogin;
     private LoginButton btnFacebook;
+    private SignInButton btnGoogle;
     private TextView txtRegister;
     private CallbackManager callbackManager;
     private boolean isCheckedSaveLogin;
+    private FacebookCallback<LoginResult> loginResult;
+    private GoogleSignInClient mGoogleSignInClient;
+    private long startTime;
+    private Context context;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ui_login);
         initViews();
+        callbackManager = CallbackManager.Factory.create();
+        initFaceBook();
+        LoginManager.getInstance().registerCallback(callbackManager, loginResult);
+        initGoogle();
+
+        context = LoginActivity.this;
         getInForUserFromSharePrefer();
+    }
+
+
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    private void initGoogle() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+    }
+
+    private void loginGoogle() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    private void initFaceBook() {
+        loginResult = new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                Intent intent = new Intent(LoginActivity.this, ViewPagerActivity.class);
+                startActivity(intent);
+                GraphRequest request = GraphRequest.newMeRequest(
+                        AccessToken.getCurrentAccessToken(),
+                        new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        String name = object.optString(getString(R.string.name));
+                        String id = object.optString(getString(R.string.id));
+                        String email = object.optString(getString(R.string.email));
+                        Log.d("luong","onsuccess");
+                        String link = object.optString(getString(R.string.link));
+                    }
+                });
+                Bundle parameters = new Bundle();
+                parameters.putString(getString(R.string.fields), getString(R.string.fields_name));
+                request.setParameters(parameters);
+                request.executeAsync();
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+
+            @Override
+            public void onError(FacebookException error) {
+
+            }
+        };
+
+    }
+
+    public void loginFaceBook(){
+        LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile", "user_friends","email"));
+    }
+
+    public boolean isLoggedInFaceBook() {
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        return accessToken != null;
     }
 
     private void initViews() {
@@ -49,6 +161,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         edtUsername = findViewById(R.id.edt_username);
         btnLogin = findViewById(R.id.btn_login);
         btnFacebook = findViewById(R.id.btn_facebook);
+        btnGoogle = findViewById(R.id.btn_google);
         txtRegister = findViewById(R.id.txt_register);
 
         cbSaveLogin = findViewById(R.id.cb_saveLogin);
@@ -63,30 +176,36 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         txtRegister.setOnClickListener(this);
         btnLogin.setOnClickListener(this);
         btnFacebook.setOnClickListener(this);
-
-        callbackManager = CallbackManager.Factory.create();
-        btnFacebook.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-
-            }
-
-            @Override
-            public void onCancel() {
-
-            }
-
-            @Override
-            public void onError(FacebookException error) {
-
-            }
-        });
+        btnGoogle.setOnClickListener(this);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        callbackManager.onActivityResult(requestCode, resultCode, data);
         super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            // The Task returned from this call is always completed, no need to attach
+            // a listener.
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+        // tra ve username tu Register
+        if (requestCode == REQUEST_REGISTER && resultCode == RESULT_OK){
+            String username = data.getStringExtra(KEY_USERNAME);
+            edtUsername.setText(username);
+        }
+    }
+
+    //tra ve thong tin nguoi dung cua google
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            Intent intent = new Intent(this, ViewPagerActivity.class);
+            startActivity(intent);
+
+        } catch (ApiException e) {
+
+        }
     }
 
     @Override
@@ -94,22 +213,52 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         switch (view.getId()){
             case R.id.txt_register:
                 Intent intentRegister = new Intent(this, RegisterActivity.class);
-                startActivity(intentRegister);
+                startActivityForResult(intentRegister, REQUEST_REGISTER);
                 break;
             case R.id.btn_login:
-                String userName = edtUsername.getText().toString();
-                String passWord = edtPassword.getText().toString();
+                String username = edtUsername.getText().toString().trim();
+                final String password = edtPassword.getText().toString().trim();
                 if (isCheckedSaveLogin){
-                    saveUser(userName, passWord);
+                    saveUser(username, password);
                 }
-                Intent intentNews  = new Intent(this, ViewPagerActivity.class);
-                startActivity(intentNews);
+                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                Query query = databaseReference.child("user").orderByChild("username").equalTo(username);
+                query.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()){
+                            for (DataSnapshot data : dataSnapshot.getChildren()){
+                                User user = data.getValue(User.class);
+                                if (user.getPassword().equals(password)){
+                                    Intent intent = new Intent(context, ViewPagerActivity.class);
+                                    startActivity(intent);
+                                }else {
+                                    Toast.makeText(context, "Mật khẩu sai", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }else {
+                            Toast.makeText(context, "Không tìm thấy người dùng", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+                startTime = Calendar.getInstance().getTimeInMillis();
+                LoginActivity.this.setStartTime(startTime);
                 break;
             case R.id.btn_facebook:
+                loginFaceBook();
+                break;
+            case R.id.btn_google:
+                loginGoogle();
                 break;
         }
     }
 
+    //luu thong tin dang nhap
     public void saveUser(String userName, String passWord){
         SharedPreferences preferences = getSharedPreferences("save_name", MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
@@ -136,19 +285,4 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         edtPassword.setText(pass);
     }
 
-//    private void printKeyHash() {
-//        try{
-//            PackageInfo info = getPackageManager().getPackageInfo("com.t3h.filternews",
-//                    PackageManager.GET_SIGNATURES);
-//            for(Signature signature:info.signatures) {
-//                MessageDigest md = MessageDigest.getInstance("SHA");
-//                md.update(signature.toByteArray());
-//                Log.d("KeyHash",Base64.encodeToString(md.digest(), Base64.DEFAULT));
-//            }
-//        } catch (PackageManager.NameNotFoundException e) {
-//            e.printStackTrace();
-//        } catch (NoSuchAlgorithmException e) {
-//            e.printStackTrace();
-//        }
-//    }
 }
