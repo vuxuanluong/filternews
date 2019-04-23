@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
@@ -54,7 +55,8 @@ import java.util.Calendar;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
     private static final int REQUEST_REGISTER = 20;
-    public static final String KEY_USERNAME = "username";
+    public static final String KEY_USERNAME = "key_username";
+    public static final String KEY_NAME = "key_name";
     private int RC_SIGN_IN = 10;
     private EditText edtUsername, edtPassword;
     private Button btnLogin;
@@ -68,17 +70,20 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private GoogleSignInClient mGoogleSignInClient;
     private long startTime;
     private Context context;
+    private FireBaseActivity fireBaseActivity;
+    private String name;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ui_login);
         initViews();
+        fireBaseActivity = new FireBaseActivity();
+        fireBaseActivity.firebase();
         callbackManager = CallbackManager.Factory.create();
         initFaceBook();
         LoginManager.getInstance().registerCallback(callbackManager, loginResult);
         initGoogle();
-
         context = LoginActivity.this;
         getInForUserFromSharePrefer();
     }
@@ -114,18 +119,38 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         loginResult = new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                Intent intent = new Intent(LoginActivity.this, ViewPagerActivity.class);
-                startActivity(intent);
                 GraphRequest request = GraphRequest.newMeRequest(
                         AccessToken.getCurrentAccessToken(),
                         new GraphRequest.GraphJSONObjectCallback() {
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
-                        String name = object.optString(getString(R.string.name));
-                        String id = object.optString(getString(R.string.id));
-                        String email = object.optString(getString(R.string.email));
-                        Log.d("luong","onsuccess");
-                        String link = object.optString(getString(R.string.link));
+                        final String name = object.optString(getString(R.string.name));
+                        final String email = object.optString(getString(R.string.email));
+                        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                        Query query = databaseReference.child("user").orderByChild("email").equalTo(email);
+                        query.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                if (dataSnapshot.exists()){
+                                    Intent intent = new Intent(context, ViewPagerActivity.class);
+                                    startActivity(intent);
+                                }else {
+                                    User user = new User.UserBuilder("", "")
+                                            .email(email)
+                                            .name(name)
+                                            .build();
+                                    fireBaseActivity.insertUser(user, name);
+                                    Intent intent = new Intent(context, ViewPagerActivity.class);
+                                    intent.putExtra(KEY_NAME, name);
+                                    startActivity(intent);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
                     }
                 });
                 Bundle parameters = new Bundle();
@@ -148,7 +173,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     }
 
     public void loginFaceBook(){
-        LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile", "user_friends","email"));
+        LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile"));
     }
 
     public boolean isLoggedInFaceBook() {
@@ -189,8 +214,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             handleSignInResult(task);
         }
-        // tra ve username tu Register
+        // tra ve username va name tu Register
         if (requestCode == REQUEST_REGISTER && resultCode == RESULT_OK){
+            name = data.getStringExtra(KEY_NAME);
             String username = data.getStringExtra(KEY_USERNAME);
             edtUsername.setText(username);
         }
@@ -200,8 +226,34 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
-            Intent intent = new Intent(this, ViewPagerActivity.class);
-            startActivity(intent);
+            final String email = account.getEmail().toString();
+            final String name = account.getDisplayName().toString();
+            //Kiem tra trong firebase email da co chua
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+            Query query = databaseReference.child("user").orderByChild("email").equalTo(email);
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()){
+                        Intent intent = new Intent(context, ViewPagerActivity.class);
+                        intent.putExtra(KEY_NAME, name);
+                        startActivity(intent);
+                    }else {
+                        User user = new User.UserBuilder("", "")
+                                .email(email)
+                                .name(name)
+                                .build();
+                        fireBaseActivity.insertUser(user, name);
+                        Intent intent = new Intent(context, ViewPagerActivity.class);
+                        startActivity(intent);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
 
         } catch (ApiException e) {
 
@@ -221,32 +273,37 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 if (isCheckedSaveLogin){
                     saveUser(username, password);
                 }
-                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-                Query query = databaseReference.child("user").orderByChild("username").equalTo(username);
-                query.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        if (dataSnapshot.exists()){
-                            for (DataSnapshot data : dataSnapshot.getChildren()){
-                                User user = data.getValue(User.class);
-                                if (user.getPassword().equals(password)){
-                                    Intent intent = new Intent(context, ViewPagerActivity.class);
-                                    startActivity(intent);
-                                }else {
-                                    Toast.makeText(context, "Mật khẩu sai", Toast.LENGTH_SHORT).show();
+                if (username.isEmpty() || password.isEmpty()){
+                    Toast.makeText(this, "Mời quý đăng nhập vào hệ thống", Toast.LENGTH_SHORT).show();
+                }else {
+                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                    Query query = databaseReference.child("user").orderByChild("username").equalTo(username);
+                    query.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()){
+                                for (DataSnapshot data : dataSnapshot.getChildren()){
+                                    User user = data.getValue(User.class);
+                                    if (user.getPassword().equals(password)){
+                                        Intent intent = new Intent(context, ViewPagerActivity.class);
+                                        intent.putExtra(KEY_NAME, name);
+                                        startActivity(intent);
+                                    }else {
+                                        Toast.makeText(context, "Mật khẩu sai", Toast.LENGTH_SHORT).show();
+                                    }
                                 }
+                            }else {
+                                Toast.makeText(context, "Không tìm thấy người dùng", Toast.LENGTH_SHORT).show();
                             }
-                        }else {
-                            Toast.makeText(context, "Không tìm thấy người dùng", Toast.LENGTH_SHORT).show();
                         }
-                    }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                    }
-                });
-                startTime = Calendar.getInstance().getTimeInMillis();
+                        }
+                    });
+                }
+                startTime = SystemClock.elapsedRealtime();
                 LoginActivity.this.setStartTime(startTime);
                 break;
             case R.id.btn_facebook:

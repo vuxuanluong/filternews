@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -30,13 +31,20 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.t3h.filternews.R;
 import com.t3h.filternews.login.LoginActivity;
+import com.t3h.filternews.login.RegisterActivity;
 import com.t3h.filternews.viewpager.FragmentItemNews;
 import com.t3h.filternews.viewpager.PageAdapter;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ViewPagerActivity extends AppCompatActivity implements ViewPager.OnPageChangeListener, View.OnClickListener {
     private ViewPager viewPager;
@@ -96,6 +104,15 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
             public boolean onQueryTextSubmit(String query) {
                 fragmentItemNews.setKeyWord(query);
                 fragmentItemNews.updateData();
+                Intent intent = getIntent();
+                String name = intent.getStringExtra(LoginActivity.KEY_NAME);
+                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                databaseReference  = databaseReference.child("user").child(name).child("keyword").push();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
+                final String date = sdf.format(new Date());
+                Map<String, Object> map = new HashMap<>();
+                map.put(date, query );
+                databaseReference.updateChildren(map);
                 return false;
             }
 
@@ -157,9 +174,14 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
                                 else if (GoogleSignIn.getLastSignedInAccount(ViewPagerActivity.this) != null){
                                     signOutGoogle();
                                 } else {
-//                                    long endTime = Calendar.getInstance().getTimeInMillis();
-//                                    long totalTime = endTime - loginActivity.getStartTime();
-//                                    Log.d("luong", totalTime + "");
+                                    long endTime = Calendar.getInstance().getTimeInMillis();
+                                    long totalTime = endTime - loginActivity.getStartTime();
+//                                    DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+//                                    DatabaseReference cineIndustryRef = rootRef.child("cineIndustry").push();
+//                                    String key = cineIndustryRef.getKey();
+//                                    Map<String, Object> map = new HashMap<>();
+//                                    map.put(key, totalTime );
+//                                    cineIndustryRef.updateChildren(map);
                                     finish();
                                 }
                                 break;

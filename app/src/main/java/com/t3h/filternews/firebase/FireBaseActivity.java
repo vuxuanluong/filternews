@@ -1,8 +1,7 @@
 package com.t3h.filternews.firebase;
 
 
-import android.content.Context;
-import android.content.Intent;
+
 import android.support.annotation.NonNull;
 
 import com.google.firebase.database.DataSnapshot;
@@ -11,11 +10,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.t3h.filternews.login.LoginActivity;
-import com.t3h.filternews.main.ViewPagerActivity;
-import com.t3h.filternews.model.User;
 
-import java.util.Objects;
 
 public class FireBaseActivity {
     private FirebaseDatabase firebaseDatabase;
@@ -30,5 +25,26 @@ public class FireBaseActivity {
         databaseReference = databaseReference.child("user").child(name);
         databaseReference.setValue(objects);
     }
+
+//    public boolean checkExists(String nameCol, String nameAttr){
+//        Query query = databaseReference.child("user").orderByChild(nameCol).equalTo(nameAttr);
+//        query.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.exists()){
+//
+//                }else {
+//
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//
+//        return false;
+//    }
 
 }
