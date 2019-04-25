@@ -8,8 +8,10 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class XMLHandler extends DefaultHandler {
@@ -28,6 +30,9 @@ public class XMLHandler extends DefaultHandler {
         super.startElement(uri, localName, qName, attributes);
         if (qName == TAG_ITEM) {
             news = new News();
+        }
+        if (localName.equalsIgnoreCase("content")) {
+            news.setImg(attributes.getValue("url"));
         }
         value = new StringBuilder();
     }
@@ -77,29 +82,8 @@ public class XMLHandler extends DefaultHandler {
             case TAG_DATE:
                 news.setPubDate(value.toString());
                 break;
-            case TAG_IMAGE:
-//                String url = "url=\"";
-//                if(value.indexOf(url) == -1){
-//                    break;
-//                }else {
-//                    int index = value.indexOf(url);
-//                    String img = value.substring(index + url.length());
-//                    index = img.indexOf("\"");
-//                    String linkImg = img.substring(0,index);
-//                    news.setImg(linkImg);
-//                }
-                try {
-                    XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-                    XmlPullParser parser = factory.newPullParser();
-                    String img = parser.getAttributeValue(null, "url\"");
-                    news.setImg(img);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-                break;
         }
     }
-
 
     public ArrayList<News> getArrNews() {
         return arrNews;

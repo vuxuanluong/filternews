@@ -35,7 +35,6 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         setContentView(R.layout.ui_register);
         initViews();
         fireBaseActivity = new FireBaseActivity();
-        fireBaseActivity.firebase();
     }
 
     private void initViews() {
@@ -75,7 +74,6 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
                         fireBaseActivity.insertUser(user, name);
                         Intent intent = new Intent();
                         intent.putExtra(LoginActivity.KEY_USERNAME, userName);
-                        intent.putExtra(LoginActivity.KEY_NAME, name);
                         setResult(RESULT_OK, intent);
                         Snackbar.make(btnRegister,"Đăng ký thành công", Snackbar.LENGTH_LONG).show();
                         finish();

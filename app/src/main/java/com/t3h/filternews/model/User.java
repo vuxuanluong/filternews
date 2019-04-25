@@ -5,7 +5,7 @@ public class User {
     private String username;
     private String password;
     private String email;
-    private String keyword;
+
 
     public User(){
 
@@ -16,7 +16,7 @@ public class User {
         this.username = builder.username;
         this.password = builder.password;
         this.email = builder.email;
-        this.keyword = builder.keyword;
+
     }
 
     public String getName() {
@@ -43,7 +43,6 @@ public class User {
         private final String password;
         private String name;
         private String email;
-        private String keyword;
 
         public UserBuilder(String username, String password){
             this.username = username;
@@ -57,11 +56,6 @@ public class User {
 
         public UserBuilder email(String email){
             this.email = email;
-            return this;
-        }
-
-        public UserBuilder keyword(String keyword){
-            this.keyword = keyword;
             return this;
         }
 

@@ -1,11 +1,9 @@
 package com.t3h.filternews.main;
 
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.speech.RecognizerIntent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,8 +12,6 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,27 +20,23 @@ import android.widget.PopupMenu;
 
 import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.t3h.filternews.R;
+import com.t3h.filternews.firebase.FireBaseActivity;
 import com.t3h.filternews.login.LoginActivity;
-import com.t3h.filternews.login.RegisterActivity;
+import com.t3h.filternews.model.User;
 import com.t3h.filternews.viewpager.FragmentItemNews;
 import com.t3h.filternews.viewpager.PageAdapter;
-
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ViewPagerActivity extends AppCompatActivity implements ViewPager.OnPageChangeListener, View.OnClickListener {
     private ViewPager viewPager;
@@ -58,6 +50,9 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
     private static final int REQUEST_CODE = 111;
     private LoginActivity loginActivity;
     private GoogleSignInClient mGoogleSignInClient;
+    private FireBaseActivity fireBaseActivity;
+    private long startTime;
+    private String name;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -67,12 +62,12 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
         getLanguageFromSharedPrefer();
         initGoogle();
         loginActivity = new LoginActivity();
-//        toolbar = findViewById(R.id.toolBar);
-//        setSupportActionBar(toolbar);
-//        if (getSupportActionBar() != null) {
-//            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//            getSupportActionBar().setDisplayShowHomeEnabled(true);
-//        }
+        fireBaseActivity = new FireBaseActivity();
+        saveNameFragmentItemNews();
+        Intent intent = getIntent();
+        startTime = Long.parseLong(intent.getStringExtra(LoginActivity.KEY_START_TIME));
+        name = intent.getStringExtra(LoginActivity.KEY_USERNAME);
+
     }
 
     private void initGoogle() {
@@ -104,15 +99,7 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
             public boolean onQueryTextSubmit(String query) {
                 fragmentItemNews.setKeyWord(query);
                 fragmentItemNews.updateData();
-                Intent intent = getIntent();
-                String name = intent.getStringExtra(LoginActivity.KEY_NAME);
-                DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-                databaseReference  = databaseReference.child("user").child(name).child("keyword").push();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
-                final String date = sdf.format(new Date());
-                Map<String, Object> map = new HashMap<>();
-                map.put(date, query );
-                databaseReference.updateChildren(map);
+                saveKeyword(query);
                 return false;
             }
 
@@ -122,6 +109,71 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
                 return false;
             }
         });
+    }
+
+    //luu keyword tim kiem theo ten nguoi dung
+    private void saveKeyword(final String query){
+        if (loginActivity.isLoggedInFaceBook()){
+            fireBaseActivity.insertKeyword(name, query);
+        }else if(GoogleSignIn.getLastSignedInAccount(ViewPagerActivity.this) != null){
+            fireBaseActivity.insertKeyword(name, query);
+        } else {
+            Intent intent = getIntent();
+            String username = intent.getStringExtra(LoginActivity.KEY_USERNAME);
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+            Query queryName = databaseReference.child("user").orderByChild("username").equalTo(username);
+            queryName.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    for (DataSnapshot data : dataSnapshot.getChildren()){
+                        User user = data.getValue(User.class);
+                        String nameLogin = user.getName();
+                        fireBaseActivity.insertKeyword(nameLogin, query);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
+    }
+
+    //chuyen ten nguoi dung sang FragmentItemNews de luu ten bai bao theo ten nguoi dung
+    private void saveNameFragmentItemNews(){
+        if (loginActivity.isLoggedInFaceBook()){
+            fragmentItemNews.setNameFrag(name);
+        }else if(GoogleSignIn.getLastSignedInAccount(ViewPagerActivity.this) != null){
+            fragmentItemNews.setNameFrag(name);
+        } else {
+            Intent intent = getIntent();
+            String username = intent.getStringExtra(LoginActivity.KEY_USERNAME);
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+            Query queryName = databaseReference.child("user").orderByChild("username").equalTo(username);
+            queryName.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    for (DataSnapshot data : dataSnapshot.getChildren()){
+                        User user = data.getValue(User.class);
+                        String nameLogin = user.getName();
+                        fragmentItemNews.setNameFrag(nameLogin);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
+    }
+
+    //luu thời gian nguoi dùng su dung app
+    private void saveTotalTime(String nameLogin){
+        long endTime = Calendar.getInstance().getTimeInMillis();
+        float totalTime = (float) (endTime - startTime) / 1000;
+        fireBaseActivity.insertTotalTime(nameLogin, totalTime);
     }
 
     @Override
@@ -168,20 +220,33 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
                             case R.id.sign_out:
                                 if (loginActivity.isLoggedInFaceBook()){
                                     LoginManager.getInstance().logOut();
+                                    saveTotalTime(name);
                                     Intent intent1 = new Intent(ViewPagerActivity.this, LoginActivity.class);
                                     startActivity(intent1);
                                 }
                                 else if (GoogleSignIn.getLastSignedInAccount(ViewPagerActivity.this) != null){
                                     signOutGoogle();
+                                    saveTotalTime(name);
                                 } else {
-                                    long endTime = Calendar.getInstance().getTimeInMillis();
-                                    long totalTime = endTime - loginActivity.getStartTime();
-//                                    DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
-//                                    DatabaseReference cineIndustryRef = rootRef.child("cineIndustry").push();
-//                                    String key = cineIndustryRef.getKey();
-//                                    Map<String, Object> map = new HashMap<>();
-//                                    map.put(key, totalTime );
-//                                    cineIndustryRef.updateChildren(map);
+                                    Intent intent = getIntent();
+                                    String username = intent.getStringExtra(LoginActivity.KEY_USERNAME);
+                                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                                    Query queryName = databaseReference.child("user").orderByChild("username").equalTo(username);
+                                    queryName.addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                            for (DataSnapshot data : dataSnapshot.getChildren()){
+                                                User user = data.getValue(User.class);
+                                                String nameLogin = user.getName();
+                                                saveTotalTime(nameLogin);
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                        }
+                                    });
                                     finish();
                                 }
                                 break;
@@ -214,6 +279,7 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
                 svSearch.clearFocus();
                 fragmentItemNews.setKeyWord(query);
                 fragmentItemNews.updateData();
+                saveKeyword(query);
             }
         }
     }

@@ -4,10 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -56,7 +54,7 @@ import java.util.Calendar;
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
     private static final int REQUEST_REGISTER = 20;
     public static final String KEY_USERNAME = "key_username";
-    public static final String KEY_NAME = "key_name";
+    public static final String KEY_START_TIME = "key_start_time";
     private int RC_SIGN_IN = 10;
     private EditText edtUsername, edtPassword;
     private Button btnLogin;
@@ -68,10 +66,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private boolean isCheckedSaveLogin;
     private FacebookCallback<LoginResult> loginResult;
     private GoogleSignInClient mGoogleSignInClient;
-    private long startTime;
     private Context context;
     private FireBaseActivity fireBaseActivity;
-    private String name;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -79,7 +75,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         setContentView(R.layout.ui_login);
         initViews();
         fireBaseActivity = new FireBaseActivity();
-        fireBaseActivity.firebase();
         callbackManager = CallbackManager.Factory.create();
         initFaceBook();
         LoginManager.getInstance().registerCallback(callbackManager, loginResult);
@@ -88,13 +83,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         getInForUserFromSharePrefer();
     }
 
-
-    public long getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
+    private void intentViewPagerActivity(String name){
+        Intent intent = new Intent(context, ViewPagerActivity.class);
+        intent.putExtra(KEY_USERNAME, name);
+        long startTime = Calendar.getInstance().getTimeInMillis();
+        intent.putExtra(KEY_START_TIME, startTime + "");
+        startActivity(intent);
     }
 
     private void initGoogle() {
@@ -132,17 +126,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 if (dataSnapshot.exists()){
-                                    Intent intent = new Intent(context, ViewPagerActivity.class);
-                                    startActivity(intent);
+                                    intentViewPagerActivity(name);
                                 }else {
                                     User user = new User.UserBuilder("", "")
                                             .email(email)
                                             .name(name)
                                             .build();
                                     fireBaseActivity.insertUser(user, name);
-                                    Intent intent = new Intent(context, ViewPagerActivity.class);
-                                    intent.putExtra(KEY_NAME, name);
-                                    startActivity(intent);
+                                    intentViewPagerActivity(name);
                                 }
                             }
 
@@ -194,7 +185,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 LoginActivity.this.isCheckedSaveLogin = b;
-
             }
         });
 
@@ -214,9 +204,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             handleSignInResult(task);
         }
-        // tra ve username va name tu Register
+        // tra ve username tu Register
         if (requestCode == REQUEST_REGISTER && resultCode == RESULT_OK){
-            name = data.getStringExtra(KEY_NAME);
             String username = data.getStringExtra(KEY_USERNAME);
             edtUsername.setText(username);
         }
@@ -228,24 +217,21 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             final String email = account.getEmail().toString();
             final String name = account.getDisplayName().toString();
-            //Kiem tra trong firebase email da co chua
+            //Kiem tra trong firebase email da ton tai chua
             DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
             Query query = databaseReference.child("user").orderByChild("email").equalTo(email);
             query.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()){
-                        Intent intent = new Intent(context, ViewPagerActivity.class);
-                        intent.putExtra(KEY_NAME, name);
-                        startActivity(intent);
+                        intentViewPagerActivity(name);
                     }else {
                         User user = new User.UserBuilder("", "")
                                 .email(email)
                                 .name(name)
                                 .build();
                         fireBaseActivity.insertUser(user, name);
-                        Intent intent = new Intent(context, ViewPagerActivity.class);
-                        startActivity(intent);
+                        intentViewPagerActivity(name);
                     }
                 }
 
@@ -268,13 +254,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 startActivityForResult(intentRegister, REQUEST_REGISTER);
                 break;
             case R.id.btn_login:
-                String username = edtUsername.getText().toString().trim();
+                final String username = edtUsername.getText().toString().trim();
                 final String password = edtPassword.getText().toString().trim();
                 if (isCheckedSaveLogin){
                     saveUser(username, password);
                 }
                 if (username.isEmpty() || password.isEmpty()){
-                    Toast.makeText(this, "Mời quý đăng nhập vào hệ thống", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Mời quý khách đăng nhập vào hệ thống", Toast.LENGTH_SHORT).show();
                 }else {
                     DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
                     Query query = databaseReference.child("user").orderByChild("username").equalTo(username);
@@ -285,9 +271,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                 for (DataSnapshot data : dataSnapshot.getChildren()){
                                     User user = data.getValue(User.class);
                                     if (user.getPassword().equals(password)){
-                                        Intent intent = new Intent(context, ViewPagerActivity.class);
-                                        intent.putExtra(KEY_NAME, name);
-                                        startActivity(intent);
+                                        intentViewPagerActivity(username);
                                     }else {
                                         Toast.makeText(context, "Mật khẩu sai", Toast.LENGTH_SHORT).show();
                                     }
@@ -303,8 +287,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         }
                     });
                 }
-                startTime = SystemClock.elapsedRealtime();
-                LoginActivity.this.setStartTime(startTime);
                 break;
             case R.id.btn_facebook:
                 loginFaceBook();

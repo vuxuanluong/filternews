@@ -16,6 +16,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +24,8 @@ import android.widget.TextView;
 
 import com.t3h.filternews.R;
 import com.t3h.filternews.adapter.Adapter;
+import com.t3h.filternews.firebase.FireBaseActivity;
+import com.t3h.filternews.login.LoginActivity;
 import com.t3h.filternews.model.News;
 import com.t3h.filternews.parse.XMLAsync;
 import com.t3h.filternews.sqlite.DAO;
@@ -39,7 +42,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
     private RecyclerView lvNews;
     private Adapter adapter;
     private ArrayList<News> arrNew = new ArrayList<>();
-    public String keyWord = "%22%22";
+    public String keyWord = "thoi tiet";
     public String language = "VN:vi";
     private XMLAsync xmlAsync;
 
@@ -48,7 +51,9 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
     private DAO dao;
     private int currentIndex;
     private String path;
+    private String nameFrag;
     private TextView tvNotify;
+    private FireBaseActivity fireBaseActivity;
 
     @Nullable
     @Override
@@ -67,7 +72,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
             return;
         }
         dao = new DAO(getContext());
-
+        fireBaseActivity = new FireBaseActivity();
     }
 
     private boolean isNetworkAvailable() {
@@ -75,6 +80,10 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
                 = (ConnectivityManager)getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    public void setNameFrag(String nameFrag) {
+        this.nameFrag = nameFrag;
     }
 
     public void setKeyWord(String keyWord) {
@@ -108,6 +117,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
         adapter.setOnItemEventCallback(this);
         downloadTask = new DownloadTask(getContext());
         tvNotify = getActivity().findViewById(R.id.tv_notify);
+
     }
 
     private Handler handler = new Handler() {
@@ -126,6 +136,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
 
     @Override
     public void onClickItem(int position) {
+        fireBaseActivity.insertTitle(nameFrag, arrNew.get(position).getTitle());
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(arrNew.get(position).getLink()));
         startActivity(browserIntent);
     }
@@ -157,6 +168,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
     @Override
     public void onLongClickItem(int position) {
         currentIndex = position;
+        fireBaseActivity.insertTitle(nameFrag, arrNew.get(position).getTitle());
         downloadTask = new DownloadTask(getContext());
         downloadTask.execute(arrNew.get(position).getLink());
     }
