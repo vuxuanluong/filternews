@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -120,28 +119,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     public void onCompleted(JSONObject object, GraphResponse response) {
                         final String name = object.optString(getString(R.string.name));
                         final String email = object.optString(getString(R.string.email));
-                        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-                        Query query = databaseReference.child("user").orderByChild("email").equalTo(email);
-                        query.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                if (dataSnapshot.exists()){
-                                    intentViewPagerActivity(name);
-                                }else {
-                                    User user = new User.UserBuilder("", "")
-                                            .email(email)
-                                            .name(name)
-                                            .build();
-                                    fireBaseActivity.insertUser(user, name);
-                                    intentViewPagerActivity(name);
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        });
+                        User user = new User.UserBuilder("", "")
+                                .email(email)
+                                .name(name)
+                                .build();
+                        fireBaseActivity.insertUser(user, name);
+                        intentViewPagerActivity(name);
                     }
                 });
                 Bundle parameters = new Bundle();
@@ -217,29 +200,12 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             final String email = account.getEmail().toString();
             final String name = account.getDisplayName().toString();
-            //Kiem tra trong firebase email da ton tai chua
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-            Query query = databaseReference.child("user").orderByChild("email").equalTo(email);
-            query.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()){
-                        intentViewPagerActivity(name);
-                    }else {
-                        User user = new User.UserBuilder("", "")
-                                .email(email)
-                                .name(name)
-                                .build();
-                        fireBaseActivity.insertUser(user, name);
-                        intentViewPagerActivity(name);
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });
+            User user = new User.UserBuilder("", "")
+                    .email(email)
+                    .name(name)
+                    .build();
+            fireBaseActivity.insertUser(user, name);
+            intentViewPagerActivity(name);
 
         } catch (ApiException e) {
 

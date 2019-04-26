@@ -13,6 +13,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.t3h.filternews.model.User;
+import com.t3h.filternews.viewpager.FragmentItemNews;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -21,7 +22,6 @@ import java.util.Map;
 
 
 public class FireBaseActivity {
-    private String name;
 
     public void insertUser(Object objects, String name){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -39,7 +39,7 @@ public class FireBaseActivity {
         databaseReference.updateChildren(map);
     }
 
-    public void insertTotalTime(String name, float totalTime){
+    public void insertTotalTime(String name, long totalTime){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         databaseReference  = databaseReference.child("user").child(name).child("totalTime").push();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
@@ -59,4 +59,35 @@ public class FireBaseActivity {
         databaseReference.updateChildren(map);
     }
 
+    public void insertKeywordAndTitleAndTotalTimeFirebase(String username, final Object object){
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+        Query queryName = databaseReference.child("user").orderByChild("username").equalTo(username);
+        queryName.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot data : dataSnapshot.getChildren()){
+                    User user = data.getValue(User.class);
+                    String nameLogin = user.getName();
+                    if(object instanceof FragmentItemNews) {
+                        FragmentItemNews a = (FragmentItemNews) object;
+                        a.setNameFrag(nameLogin);
+                    }
+                    if(object instanceof String) {
+                        insertKeyword(nameLogin, object.toString());
+                    }
+                    if (object instanceof Long ){
+                        insertTotalTime(nameLogin, ((Long) object).longValue());
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
 }
+
+

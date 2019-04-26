@@ -56,9 +56,6 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHoder> {
                     return true;
                 }
             };
-//            holder.tvTitle.setOnLongClickListener(onLongClickListener);
-//            holder.tvDesc.setOnLongClickListener(onLongClickListener);
-//            holder.tvDate.setOnLongClickListener(onLongClickListener);
             holder.imNews.setOnLongClickListener(onLongClickListener);
 
             holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {

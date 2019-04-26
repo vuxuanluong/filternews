@@ -13,6 +13,35 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:src="@drawable/ic_face" />
+
+        <EditText
+            android:id="@+id/edt_name"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:hint="name"
+            android:inputType="text"/>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/ic_start"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_margin="20dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
@@ -99,35 +128,6 @@
             android:layout_height="wrap_content"
             android:hint="Email"
             android:inputType="textEmailAddress"/>
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
-            android:src="@drawable/ic_face" />
-
-        <EditText
-            android:id="@+id/edt_name"
-            android:layout_width="250dp"
-            android:layout_height="wrap_content"
-            android:hint="name"
-            android:inputType="text"/>
-
-        <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:src="@drawable/ic_start"/>
 
     </LinearLayout>
 

@@ -120,23 +120,7 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
         } else {
             Intent intent = getIntent();
             String username = intent.getStringExtra(LoginActivity.KEY_USERNAME);
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-            Query queryName = databaseReference.child("user").orderByChild("username").equalTo(username);
-            queryName.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    for (DataSnapshot data : dataSnapshot.getChildren()){
-                        User user = data.getValue(User.class);
-                        String nameLogin = user.getName();
-                        fireBaseActivity.insertKeyword(nameLogin, query);
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });
+            fireBaseActivity.insertKeywordAndTitleAndTotalTimeFirebase(username, query);
         }
     }
 
@@ -149,31 +133,8 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
         } else {
             Intent intent = getIntent();
             String username = intent.getStringExtra(LoginActivity.KEY_USERNAME);
-            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-            Query queryName = databaseReference.child("user").orderByChild("username").equalTo(username);
-            queryName.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    for (DataSnapshot data : dataSnapshot.getChildren()){
-                        User user = data.getValue(User.class);
-                        String nameLogin = user.getName();
-                        fragmentItemNews.setNameFrag(nameLogin);
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                }
-            });
+            fireBaseActivity.insertKeywordAndTitleAndTotalTimeFirebase(username, fragmentItemNews);
         }
-    }
-
-    //luu thời gian nguoi dùng su dung app
-    private void saveTotalTime(String nameLogin){
-        long endTime = Calendar.getInstance().getTimeInMillis();
-        float totalTime = (float) (endTime - startTime) / 1000;
-        fireBaseActivity.insertTotalTime(nameLogin, totalTime);
     }
 
     @Override
@@ -218,35 +179,21 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
                                 saveLanguage(english);
                                 break;
                             case R.id.sign_out:
+                                long endTime = Calendar.getInstance().getTimeInMillis();
+                                long totalTime = (endTime - startTime) / 1000;
                                 if (loginActivity.isLoggedInFaceBook()){
                                     LoginManager.getInstance().logOut();
-                                    saveTotalTime(name);
+                                    fireBaseActivity.insertTotalTime(name, totalTime);
                                     Intent intent1 = new Intent(ViewPagerActivity.this, LoginActivity.class);
                                     startActivity(intent1);
                                 }
                                 else if (GoogleSignIn.getLastSignedInAccount(ViewPagerActivity.this) != null){
                                     signOutGoogle();
-                                    saveTotalTime(name);
+                                    fireBaseActivity.insertTotalTime(name, totalTime);
                                 } else {
                                     Intent intent = getIntent();
                                     String username = intent.getStringExtra(LoginActivity.KEY_USERNAME);
-                                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-                                    Query queryName = databaseReference.child("user").orderByChild("username").equalTo(username);
-                                    queryName.addListenerForSingleValueEvent(new ValueEventListener() {
-                                        @Override
-                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                            for (DataSnapshot data : dataSnapshot.getChildren()){
-                                                User user = data.getValue(User.class);
-                                                String nameLogin = user.getName();
-                                                saveTotalTime(nameLogin);
-                                            }
-                                        }
-
-                                        @Override
-                                        public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                        }
-                                    });
+                                    fireBaseActivity.insertKeywordAndTitleAndTotalTimeFirebase(username, totalTime);
                                     finish();
                                 }
                                 break;
