@@ -27,7 +27,7 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
 
     private EditText edtUser, edtPass, edtEmail, edtName;
     private Button btnRegister;
-    private ImageView imgErrorUsername, imgStartUsername;
+    private ImageView imgErrorEmail, imgStartEmail;
     private FireBaseActivity fireBaseActivity;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,8 +42,8 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         edtPass = findViewById(R.id.edt_password);
         edtEmail = findViewById(R.id.edt_email);
         edtName = findViewById(R.id.edt_name);
-        imgErrorUsername = findViewById(R.id.img_error_username);
-        imgStartUsername = findViewById(R.id.img_start_username);
+        imgErrorEmail = findViewById(R.id.img_error_email);
+        imgStartEmail = findViewById(R.id.img_start_email);
         btnRegister = findViewById(R.id.btn_register);
         btnRegister.setOnClickListener(this);
     }
@@ -54,24 +54,24 @@ public class RegisterActivity extends AppCompatActivity implements View.OnClickL
         final String passWord = edtPass.getText().toString();
         final String email = edtEmail.getText().toString();
         final String name = edtName.getText().toString();
-        if (userName.isEmpty() || passWord.isEmpty() || name.isEmpty()){
+        if (userName.isEmpty() || passWord.isEmpty() || name.isEmpty() || email.isEmpty()){
             Snackbar.make(btnRegister,"Không được để trống trường dữ liệu bắt buộc", Snackbar.LENGTH_SHORT).show();
         }else {
             DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-            Query query = databaseReference.child("user").orderByChild("username").equalTo(userName);
+            Query query = databaseReference.child("user").orderByChild("email").equalTo(email);
             query.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     if (dataSnapshot.exists()){
-                        Snackbar.make(btnRegister,"Tên tài khoản đã tồn tại", Snackbar.LENGTH_SHORT).show();
-                        imgErrorUsername.setVisibility(View.VISIBLE);
-                        imgStartUsername.setVisibility(View.INVISIBLE);
+                        Snackbar.make(btnRegister,"Tài khoản email đã tồn tại", Snackbar.LENGTH_SHORT).show();
+                        imgErrorEmail.setVisibility(View.VISIBLE);
+                        imgStartEmail.setVisibility(View.INVISIBLE);
                     }else {
                         User user = new User.UserBuilder(userName, passWord)
                                 .email(email)
                                 .name(name)
                                 .build();
-                        fireBaseActivity.insertUser(user, name);
+                        fireBaseActivity.insertUser(user, email);
                         Intent intent = new Intent();
                         intent.putExtra(LoginActivity.KEY_USERNAME, userName);
                         setResult(RESULT_OK, intent);

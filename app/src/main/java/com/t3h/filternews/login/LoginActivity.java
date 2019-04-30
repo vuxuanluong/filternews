@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -52,8 +53,9 @@ import java.util.Calendar;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
     private static final int REQUEST_REGISTER = 20;
-    public static final String KEY_USERNAME = "key_username";
+    public static final String KEY_EMAIL = "key_email";
     public static final String KEY_START_TIME = "key_start_time";
+    public static final String KEY_USERNAME = "key_username";
     private int RC_SIGN_IN = 10;
     private EditText edtUsername, edtPassword;
     private Button btnLogin;
@@ -82,9 +84,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         getInForUserFromSharePrefer();
     }
 
-    private void intentViewPagerActivity(String name){
+    private void intentViewPagerActivity(String email){
         Intent intent = new Intent(context, ViewPagerActivity.class);
-        intent.putExtra(KEY_USERNAME, name);
+        intent.putExtra(KEY_EMAIL, email);
         long startTime = Calendar.getInstance().getTimeInMillis();
         intent.putExtra(KEY_START_TIME, startTime + "");
         startActivity(intent);
@@ -119,12 +121,28 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     public void onCompleted(JSONObject object, GraphResponse response) {
                         final String name = object.optString(getString(R.string.name));
                         final String email = object.optString(getString(R.string.email));
-                        User user = new User.UserBuilder("", "")
-                                .email(email)
-                                .name(name)
-                                .build();
-                        fireBaseActivity.insertUser(user, name);
-                        intentViewPagerActivity(name);
+                        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                        Query query = databaseReference.child("user").orderByChild("email").equalTo(email);
+                        query.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                if (dataSnapshot.exists()){
+                                    intentViewPagerActivity(email);
+                                }else {
+                                    User user = new User.UserBuilder("", "")
+                                            .email(email)
+                                            .name(name)
+                                            .build();
+                                    fireBaseActivity.insertUser(user, email);
+                                    intentViewPagerActivity(email);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
                     }
                 });
                 Bundle parameters = new Bundle();
@@ -200,12 +218,28 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             final String email = account.getEmail().toString();
             final String name = account.getDisplayName().toString();
-            User user = new User.UserBuilder("", "")
-                    .email(email)
-                    .name(name)
-                    .build();
-            fireBaseActivity.insertUser(user, name);
-            intentViewPagerActivity(name);
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+            Query query = databaseReference.child("user").orderByChild("email").equalTo(email);
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.exists()){
+                        intentViewPagerActivity(email);
+                    }else {
+                        User user = new User.UserBuilder("", "")
+                                .email(email)
+                                .name(name)
+                                .build();
+                        fireBaseActivity.insertUser(user, email);
+                        intentViewPagerActivity(email);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
 
         } catch (ApiException e) {
 
@@ -237,7 +271,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                                 for (DataSnapshot data : dataSnapshot.getChildren()){
                                     User user = data.getValue(User.class);
                                     if (user.getPassword().equals(password)){
-                                        intentViewPagerActivity(username);
+                                        Intent intent = new Intent(context, ViewPagerActivity.class);
+                                        intent.putExtra(KEY_USERNAME, username);
+                                        long startTime = Calendar.getInstance().getTimeInMillis();
+                                        intent.putExtra(KEY_START_TIME, startTime + "");
+                                        startActivity(intent);
                                     }else {
                                         Toast.makeText(context, "Mật khẩu sai", Toast.LENGTH_SHORT).show();
                                     }

@@ -58,24 +58,13 @@
             android:layout_height="wrap_content"
             android:hint="Username"
             android:inputType="text"/>
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <ImageView
-                android:id="@+id/img_start_username"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:src="@drawable/ic_start"/>
-            <ImageView
-                android:id="@+id/img_error_username"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:src="@drawable/ic_error"
-                android:visibility="invisible"/>
 
-        </RelativeLayout>
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/ic_start" />
+
 
     </LinearLayout>
 
@@ -128,6 +117,24 @@
             android:layout_height="wrap_content"
             android:hint="Email"
             android:inputType="textEmailAddress"/>
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageView
+                android:id="@+id/img_start_email"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:src="@drawable/ic_start"/>
+            <ImageView
+                android:id="@+id/img_error_email"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:src="@drawable/ic_error"
+                android:visibility="invisible"/>
+
+        </RelativeLayout>
 
     </LinearLayout>
 

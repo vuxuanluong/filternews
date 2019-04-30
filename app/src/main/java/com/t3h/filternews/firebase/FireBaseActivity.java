@@ -23,15 +23,17 @@ import java.util.Map;
 
 public class FireBaseActivity {
 
-    public void insertUser(Object objects, String name){
+    public void insertUser(Object objects, String email){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference = databaseReference.child("user").child(name);
+        String emailEncode = encodeUserEmail(email);
+        databaseReference = databaseReference.child("user").child(emailEncode);
         databaseReference.setValue(objects);
     }
 
-    public void insertKeyword(String name, String keyword){
+    public void insertKeyword(String email, String keyword){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference  = databaseReference.child("user").child(name).child("keyword").push();
+        String emailEncode = encodeUserEmail(email);
+        databaseReference  = databaseReference.child("user").child(emailEncode).child("keyword").push();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
         final String date = sdf.format(new Date());
         Map<String, Object> map = new HashMap<>();
@@ -39,9 +41,10 @@ public class FireBaseActivity {
         databaseReference.updateChildren(map);
     }
 
-    public void insertTotalTime(String name, long totalTime){
+    public void insertTotalTime(String email, long totalTime){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference  = databaseReference.child("user").child(name).child("totalTime").push();
+        String emailEncode = encodeUserEmail(email);
+        databaseReference  = databaseReference.child("user").child(emailEncode).child("totalTime").push();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
         final String date = sdf.format(new Date());
         Map<String, Object> map = new HashMap<>();
@@ -49,9 +52,10 @@ public class FireBaseActivity {
         databaseReference.updateChildren(map);
     }
 
-    public void insertTitle(String name, String title){
+    public void insertTitle(String email, String title){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-        databaseReference  = databaseReference.child("user").child(name).child("title").push();
+        String emailEncode = encodeUserEmail(email);
+        databaseReference  = databaseReference.child("user").child(emailEncode).child("title").push();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
         final String date = sdf.format(new Date());
         Map<String, Object> map = new HashMap<>();
@@ -67,16 +71,16 @@ public class FireBaseActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot data : dataSnapshot.getChildren()){
                     User user = data.getValue(User.class);
-                    String nameLogin = user.getName();
+                    String email = user.getEmail();
                     if(object instanceof FragmentItemNews) {
                         FragmentItemNews a = (FragmentItemNews) object;
-                        a.setNameFrag(nameLogin);
+                        a.setEmailFrag(email);
                     }
                     if(object instanceof String) {
-                        insertKeyword(nameLogin, object.toString());
+                        insertKeyword(email, object.toString());
                     }
                     if (object instanceof Long ){
-                        insertTotalTime(nameLogin, ((Long) object).longValue());
+                        insertTotalTime(email, ((Long) object).longValue());
                     }
                 }
             }
@@ -86,6 +90,14 @@ public class FireBaseActivity {
 
             }
         });
+    }
+
+    public String encodeUserEmail(String userEmail) {
+        return userEmail.replace(".", ",");
+    }
+
+    public String decodeUserEmail(String userEmail) {
+        return userEmail.replace(",", ".");
     }
 
 }

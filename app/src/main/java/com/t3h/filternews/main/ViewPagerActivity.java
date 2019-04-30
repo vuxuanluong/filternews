@@ -52,7 +52,7 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
     private GoogleSignInClient mGoogleSignInClient;
     private FireBaseActivity fireBaseActivity;
     private long startTime;
-    private String name;
+    private String email;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -63,11 +63,10 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
         initGoogle();
         loginActivity = new LoginActivity();
         fireBaseActivity = new FireBaseActivity();
-        saveNameFragmentItemNews();
         Intent intent = getIntent();
         startTime = Long.parseLong(intent.getStringExtra(LoginActivity.KEY_START_TIME));
-        name = intent.getStringExtra(LoginActivity.KEY_USERNAME);
-
+        email = intent.getStringExtra(LoginActivity.KEY_EMAIL);
+        saveNameFragmentItemNews();
     }
 
     private void initGoogle() {
@@ -114,9 +113,9 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
     //luu keyword tim kiem theo ten nguoi dung
     private void saveKeyword(final String query){
         if (loginActivity.isLoggedInFaceBook()){
-            fireBaseActivity.insertKeyword(name, query);
+            fireBaseActivity.insertKeyword(email, query);
         }else if(GoogleSignIn.getLastSignedInAccount(ViewPagerActivity.this) != null){
-            fireBaseActivity.insertKeyword(name, query);
+            fireBaseActivity.insertKeyword(email, query);
         } else {
             Intent intent = getIntent();
             String username = intent.getStringExtra(LoginActivity.KEY_USERNAME);
@@ -127,9 +126,9 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
     //chuyen ten nguoi dung sang FragmentItemNews de luu ten bai bao theo ten nguoi dung
     private void saveNameFragmentItemNews(){
         if (loginActivity.isLoggedInFaceBook()){
-            fragmentItemNews.setNameFrag(name);
+            fragmentItemNews.setEmailFrag(email);
         }else if(GoogleSignIn.getLastSignedInAccount(ViewPagerActivity.this) != null){
-            fragmentItemNews.setNameFrag(name);
+            fragmentItemNews.setEmailFrag(email);
         } else {
             Intent intent = getIntent();
             String username = intent.getStringExtra(LoginActivity.KEY_USERNAME);
@@ -183,13 +182,13 @@ public class ViewPagerActivity extends AppCompatActivity implements ViewPager.On
                                 long totalTime = (endTime - startTime) / 1000;
                                 if (loginActivity.isLoggedInFaceBook()){
                                     LoginManager.getInstance().logOut();
-                                    fireBaseActivity.insertTotalTime(name, totalTime);
+                                    fireBaseActivity.insertTotalTime(email, totalTime);
                                     Intent intent1 = new Intent(ViewPagerActivity.this, LoginActivity.class);
                                     startActivity(intent1);
                                 }
                                 else if (GoogleSignIn.getLastSignedInAccount(ViewPagerActivity.this) != null){
                                     signOutGoogle();
-                                    fireBaseActivity.insertTotalTime(name, totalTime);
+                                    fireBaseActivity.insertTotalTime(email, totalTime);
                                 } else {
                                     Intent intent = getIntent();
                                     String username = intent.getStringExtra(LoginActivity.KEY_USERNAME);

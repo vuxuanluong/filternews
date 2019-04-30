@@ -51,7 +51,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
     private DAO dao;
     private int currentIndex;
     private String path;
-    private String nameFrag;
+    private String emailFrag;
     private TextView tvNotify;
     private FireBaseActivity fireBaseActivity;
 
@@ -82,8 +82,8 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public void setNameFrag(String nameFrag) {
-        this.nameFrag = nameFrag;
+    public void setEmailFrag(String emailFrag) {
+        this.emailFrag = emailFrag;
     }
 
     public void setKeyWord(String keyWord) {
@@ -136,7 +136,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
 
     @Override
     public void onClickItem(int position) {
-        fireBaseActivity.insertTitle(nameFrag, arrNew.get(position).getTitle());
+        fireBaseActivity.insertTitle(emailFrag, arrNew.get(position).getTitle());
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(arrNew.get(position).getLink()));
         startActivity(browserIntent);
     }
@@ -168,7 +168,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
     @Override
     public void onLongClickItem(int position) {
         currentIndex = position;
-        fireBaseActivity.insertTitle(nameFrag, arrNew.get(position).getTitle());
+        fireBaseActivity.insertTitle(emailFrag, arrNew.get(position).getTitle());
         downloadTask = new DownloadTask(getContext());
         downloadTask.execute(arrNew.get(position).getLink());
     }
