@@ -2,6 +2,7 @@ package com.t3h.filternews.viewpager;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -14,14 +15,19 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.facebook.share.model.ShareLinkContent;
+import com.facebook.share.widget.ShareDialog;
 import com.t3h.filternews.R;
 import com.t3h.filternews.adapter.Adapter;
 import com.t3h.filternews.firebase.FireBaseActivity;
@@ -54,6 +60,9 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
     private String emailFrag;
     private TextView tvNotify;
     private FireBaseActivity fireBaseActivity;
+    private ShareDialog shareDialog;
+    private ShareLinkContent shareLinkContent;
+
 
     @Nullable
     @Override
@@ -73,6 +82,7 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
         }
         dao = new DAO(getContext());
         fireBaseActivity = new FireBaseActivity();
+        shareDialog = new ShareDialog(getActivity());
     }
 
     private boolean isNetworkAvailable() {
@@ -166,16 +176,37 @@ public class FragmentItemNews extends Fragment implements Adapter.OnItemEventCal
     }
 
     @Override
-    public void onLongClickItem(int position) {
+    public void onLongClickItem(final int position) {
         currentIndex = position;
-        fireBaseActivity.insertTitle(emailFrag, arrNew.get(position).getTitle());
-        downloadTask = new DownloadTask(getContext());
-        downloadTask.execute(arrNew.get(position).getLink());
     }
 
     @Override
     public void onClickItemView(View view) {
-
+        PopupMenu popupMenu = new PopupMenu(getContext(), view);
+        popupMenu.getMenuInflater().inflate(R.menu.popup_download_share, popupMenu.getMenu());
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()){
+                    case R.id.download:
+                        fireBaseActivity.insertTitle(emailFrag, arrNew.get(currentIndex).getTitle());
+                        downloadTask = new DownloadTask(getContext());
+                        downloadTask.execute(arrNew.get(currentIndex).getLink());
+                        break;
+                    case R.id.share_facebook:
+                        if (ShareDialog.canShow(ShareLinkContent.class)){
+                            shareLinkContent = new ShareLinkContent.Builder()
+                                    .setContentTitle(arrNew.get(currentIndex).getTitle())
+                                    .setContentUrl(Uri.parse(arrNew.get(currentIndex).getLink()))
+                                    .build();
+                        }
+                        shareDialog.show(shareLinkContent);
+                        break;
+                }
+                return true;
+            }
+        });
+        popupMenu.show();
     }
 
 

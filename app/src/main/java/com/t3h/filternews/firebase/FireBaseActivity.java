@@ -22,6 +22,13 @@ import java.util.Map;
 
 
 public class FireBaseActivity {
+    private FirebaseDatabase firebaseDatabase;
+    private DatabaseReference databaseReference;
+
+    public void initFirebase(){
+         firebaseDatabase = FirebaseDatabase.getInstance();
+         databaseReference = firebaseDatabase.getReference();
+     }
 
     public void insertUser(Object objects, String email){
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();

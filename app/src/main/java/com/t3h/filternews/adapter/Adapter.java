@@ -91,8 +91,8 @@ public class Adapter extends RecyclerView.Adapter<Adapter.ViewHoder> {
         public void binData(News news) {
             Glide.with(itemView.getContext())
                     .load(news.getImg())
-                    .placeholder(R.drawable.ic_launcher_background)
-                    .error(R.drawable.ic_launcher_background)
+                    .placeholder(R.drawable.filternews)
+                    .error(R.drawable.filternews)
                     .into(imNews);
             tvTitle.setText(news.getTitle());
             tvDesc.setText(news.getDesc());
